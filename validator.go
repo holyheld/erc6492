@@ -33,6 +33,11 @@ func (v Validator) validate(ctx context.Context, message []byte, signer string, 
 	hash := common.BytesToHash(accounts.TextHash(message))
 	signatureHex := common.FromHex(signature)
 
+	// EOAs, including EIP-7702 delegated ones, are verified off-chain
+	if recoversToSigner(hash, signatureHex, validatorAddress) {
+		return true, nil
+	}
+
 	input, err := encodeData(validatorAddress, hash, signatureHex)
 	if err != nil {
 		return false, fmt.Errorf("failed to encode data to call predeploy contract: %w", err)
